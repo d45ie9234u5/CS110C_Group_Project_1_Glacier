@@ -140,7 +140,7 @@
 #include <set>
 #include <dllist.h>
 template <class L, class N>
-class simple_stat {
+class Simple_stat {
 private:
     DLList<std::pair<N, int>>* data_obj;
     double data_mean = 0.0;
@@ -165,16 +165,28 @@ private:
 
 
 public:
-    simple_stat(){
-        new DLList(data_obj);
+    Simple_stat(){
+        new DLList(data_obj());
     }
 
-    simple_stat(L data_feed){
+    Simple_stat(L data_feed){
         feed(data_feed);
     }
 
-    ~simple_stat(){
+    ~Simple_stat(){
         empty();
+    }
+
+    N& operator[](int indexnum) {
+        int index_sum = 0;
+        if (this->data_obj.length() > 0){
+            for (auto i:data_obj) {
+                index_sum += this->data_obj.second;
+                if (indexnum >= index_sum && indexnum <= index_sum){
+                    return this->data_obj.first;
+                }
+            }
+        }
     }
 
     void append(N num){
@@ -246,8 +258,9 @@ public:
         }
     }
 
-    void feed(L data_feed){
-        for (auto num=data_feed.begin(); num !=data_feed.end();++num){
+
+    void feed(const L &data_feed){
+        for (auto num = data_feed.begin(); num != data_feed.end();++num){
             append(num);
         }
     }
@@ -256,7 +269,7 @@ public:
         return data_mean;
     }
 
-    double get_sd(){
+    double get_SD(){
         return data_sd;
     }
 
