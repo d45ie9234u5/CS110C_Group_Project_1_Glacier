@@ -1,3 +1,7 @@
+// append function uses source code from
+// https://www.geeksforgeeks.org/problem-in-comparing-floating-point-numbers-
+// and-how-to-compare-them-correctly/ to determine equality of double type
+//
 // The objective of this project is to represent a series of numeric type (both
 //    integer and double) data (is called "data object" from now on) that
 //    offers access to few statistics (mentioned below)  according to below
@@ -18,7 +22,7 @@
 //    Update operations: not frequent compared to  frequent demands of
 //       statistics. Therefore, okey if they are expensive operations like
 //       O(n):
-//       append: append new data. Update exist number of duplication or append
+//       append: append new data.  Update exist number of duplication or append
 //          from the end if new
 //       removem: remove m number of a given data element only if m is less
 //          than or equal to current amount of repetitions, n
@@ -86,24 +90,130 @@
 //
 // 1. Definition and implementation of simple_stats class
 //    a. Private members:
-//          1. simple_dataset: array of data
+//          1. data_obj: doubly linked list std:pair auto value, int count
 //          2. data_mean: mean of data set
 //          3. data_sd: standard deviation of data set
 //          4. data_min: minimum value in data set
 //          5. data_max: maximum value in data set
 //          6. data_sum: sum of all values in set
-//          6. calc_stats(new_element):
+//          7. data_count: count of all elements
+//          8. calc_stats(new_element):
 //                data_sum += new_element
-//                data_mean = data_sum/# of elements
+//                data_count += 1
+//                data_mean = data_sum/data_count
 //                data_sd =
-//                  sqrt((data_sd + (pow(new_element - data_mean, 2))/# of elem)
+//                  sqrt((data_sd + (pow(new_element - data_mean, 2))/
+//                  data_count)
+//                data_min =
+//                  if new_element < data_min then data_min = new_element
+//                data_max =
+//                  if new_element > data_max then data_max = new_element
 //    b. Public members:
-//          1. default constructor: create empty data object
-//          2. constructor that calls feed with undefined iterable data object
-//          3. append: append single element to array, calculate stats and
-//                update private members
-//          4. removem:
+//          1.  default constructor: create empty data object
+//          2.  constructor that calls feed with undefined iterable data object
+//          3.  [] overload operator: if index is >=  data_count
+//                 than return NULL, else iterate through data_obj.count until
+//                 index supplied is within range and return the data_obj.value
+//                 for that index value.
+//          4.  append: iterate through data_obj.value, if found, increment
+//                      data_obj.count, calc_stats.  else append data_obj and
+//                      set data_obj.count = 1
+//          5.  removem: check if value is >= data_min and <= data_max, then
+//                       iterate through data_obj.value and if m =
+//                       data_obj.count, delete data_obj object, else if
+//                       < data_obj.count -= m, else return not error
+//          6.  empty: clear data_obj, and all stats (call default constructor)
+//          7.  search: iterate through data_obj.value, increment index_count
+//                      with data_obj.count and if found return index_count-1
+//                      and data_obj.count
+//          8.  length_unique: return data_obj.length
+//          9.  length_total: return data_count
+//          10. unique_set: iterate through data_obj.value and append to set.
+//          11. feed: iterate through any data object and call append on each
+//              element
+//          12. get_mean: return data_mean.
+//          13. get_sd: return data_sd.
+//          14. get_min: return data_min.
+//          15. get_max: return data_max.
 #ifndef SIMPLE_STAT_H
 #define SIMPLE_STAT_H
+#include <dllist.h>
+template <class L, class N>
+class simple_stat {
+private:
+    DLList<std::pair<N, int>>* data_obj;
+    double data_mean;
+    double data_sd;
+    N data_min;
+    N data_max;
+    N data_sum;
+    int data_count;
 
+    void calc_stats(N new_element) {
+        data_sum += new_element;
+        data_count++;
+        data_mean = data_sum/data_count*1.0;
+        data_sd = sqrt(data_sd + ((pow(new_element - data_mean, 2))
+                  /data_count));
+        if(this->data_obj.length() == 0 || new_element < data_min)
+            data_min = new_element;
+        if(this->data_obj.length() == 0 || new_element > data_max)
+            data_max = new_element;
+    }
+
+    int check_for_num(N num, DLList<std::pair<N, int>>* data_obj){
+        if (this->data_obj.length() > 0) {
+            if ((num - data_min) >= 1e-9 || (num - data_max) <= 1e-9) {
+                for (auto i:data_obj) {
+                    // check if num is in data_obj, require checking for double
+                    // precision on equality
+                    if (abs(num - i.first) < 1e-9) {
+                        return this->data_obj->currPos();
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+public:
+    simple_stat(){
+        new DLList(data_obj);
+    }
+
+    simple_stat(L data_feed){
+        feed(data_feed);
+    }
+
+    ~simple_stat(){
+        delete data_obj;
+    }
+
+    void feed(L data_feed){
+        for (auto num=data_feed.begin(); num !=data_feed.end();++num){
+            append(num);
+        }
+    }
+
+    void append(N num){
+        if (check_for_num(num, this->data_obj) > 0) {
+                    this->data_obj.second++;
+                    calc_stats(num);
+                    return;
+                }
+
+        this->data_obj.append(std::pair(num,1));
+        calc_stats(num);
+    }
+
+    void removem(N num, int reps){
+        if (check_for_num(num, this->data_obj) > 0) {
+                if (reps < this->data_obj.second) {
+                    this->data_obj.second -= reps;
+                } else if (reps == this->data_obj.second) {
+                    this->data_obj->remove();
+                }
+            }
+    }
+};
 #endif // SIMPLE_STAT_H
