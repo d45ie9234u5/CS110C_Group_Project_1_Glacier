@@ -122,7 +122,7 @@
 //                       iterate through data_obj.value and if m =
 //                       data_obj.count, delete data_obj object, else if
 //                       < data_obj.count -= m, else return not error
-//          6.  empty: clear data_obj, and all stats (call default constructor)
+//          6.  empty: clear data_obj, and all stats
 //          7.  search: iterate through data_obj.value, increment index_count
 //                      with data_obj.count and if found return index_count-1
 //                      and data_obj.count
@@ -137,17 +137,18 @@
 //          15. get_max: return data_max.
 #ifndef SIMPLE_STAT_H
 #define SIMPLE_STAT_H
+#include <set>
 #include <dllist.h>
 template <class L, class N>
 class simple_stat {
 private:
     DLList<std::pair<N, int>>* data_obj;
-    double data_mean;
-    double data_sd;
-    N data_min;
-    N data_max;
-    N data_sum;
-    int data_count;
+    double data_mean = 0.0;
+    double data_sd = 0.0;
+    N data_min = 0.0;
+    N data_max = 0.0;
+    N data_sum = 0.0;
+    int data_count = 0;
 
     void calc_stats(N new_element) {
         data_sum += new_element;
@@ -161,20 +162,7 @@ private:
             data_max = new_element;
     }
 
-    int check_for_num(N num, DLList<std::pair<N, int>>* data_obj){
-        if (this->data_obj.length() > 0) {
-            if ((num - data_min) >= 1e-9 || (num - data_max) <= 1e-9) {
-                for (auto i:data_obj) {
-                    // check if num is in data_obj, require checking for double
-                    // precision on equality
-                    if (abs(num - i.first) < 1e-9) {
-                        return this->data_obj->currPos();
-                    }
-                }
-            }
-        }
-        return 0;
-    }
+
 
 public:
     simple_stat(){
@@ -186,17 +174,11 @@ public:
     }
 
     ~simple_stat(){
-        delete data_obj;
-    }
-
-    void feed(L data_feed){
-        for (auto num=data_feed.begin(); num !=data_feed.end();++num){
-            append(num);
-        }
+        empty();
     }
 
     void append(N num){
-        if (check_for_num(num, this->data_obj) > 0) {
+        if (search(num, this->data_obj) != std::pair(0,0)) {
                     this->data_obj.second++;
                     calc_stats(num);
                     return;
@@ -206,8 +188,8 @@ public:
         calc_stats(num);
     }
 
-    void removem(N num, int reps){
-        if (check_for_num(num, this->data_obj) > 0) {
+    void removem(N m, int reps){
+        if (search(m, this->data_obj) != std::pair(0,0)) {
                 if (reps < this->data_obj.second) {
                     this->data_obj.second -= reps;
                 } else if (reps == this->data_obj.second) {
@@ -215,5 +197,76 @@ public:
                 }
             }
     }
+
+    void empty() {
+        delete data_obj;
+        data_obj = NULL;
+        data_sum = NULL;
+        data_count = NULL;
+        data_mean = NULL;
+        data_sd = NULL;
+        data_min = NULL;
+        data_max = NULL;
+    }
+
+    std::pair<int, int> search(N num){
+        if (this->data_obj.length() > 0) {
+            if ((num - data_min) >= 1e-9 || (num - data_max) <= 1e-9) {
+                for (auto i:data_obj) {
+                    // check if num is in data_obj, require checking for double
+                    // precision on equality
+                    if (abs(num - i.first) < 1e-9) {
+                        return std::pair(this->data_obj->currPos(),
+                                         this->data_obj.second);
+                    }
+                }
+            }
+        }
+        return std::pair(0,0);
+    }
+
+    int length_unique() {
+        return this->data_obj->length();
+    }
+
+    int length_total() {
+        int sum_elements = 0;
+        if (this->data_obj.length() > 0){
+            for (auto i:data_obj) {
+                sum_elements += i.second;
+            }
+        }
+        return sum_elements;
+    }
+
+    std::set<N> unique_set() {
+        std::set<N> uni_set;
+        for (auto i:data_obj) {
+            uni_set.insert(i.first);
+        }
+    }
+
+    void feed(L data_feed){
+        for (auto num=data_feed.begin(); num !=data_feed.end();++num){
+            append(num);
+        }
+    }
+
+    double get_mean(){
+        return data_mean;
+    }
+
+    double get_sd(){
+        return data_sd;
+    }
+
+    N get_min(){
+        return data_min;
+    }
+
+    N get_max(){
+        return data_max;
+    }
+
 };
 #endif // SIMPLE_STAT_H
