@@ -4,6 +4,7 @@ CCSF CS110C Section 002 - Spring, 2022 - Glacier Group Project - Simple_Stat
 This project is written to store a data object containing both integer and double types and the associated mean, standard deviation, minimum and maximum of all elements.  The data object will contain many duplicate values.
 
 The following operations are available:
+
   append: Update existing element duplicate or append to end if new.
   removem: Remove m number of data element only if m is less than the current amount of duplicates of that element.
   empty: delete all data.
