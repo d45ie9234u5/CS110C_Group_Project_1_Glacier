@@ -140,7 +140,7 @@
 #include <set>
 #include <llist.h>
 
-template <class L, class N> class Simple_stat {
+template <class L, class N> class Simple_stat: public LList<L> {
 private:
     LList<std::pair<N, int>>* data_obj;
     double data_mean = 0.0;
@@ -171,7 +171,6 @@ public:
 
 
     Simple_stat(L data_feed, N){
-        new LList(data_obj);
         feed(data_feed);
     }
 

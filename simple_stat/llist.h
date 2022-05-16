@@ -54,7 +54,7 @@ public:
   }
   // Remove and return current element
   E remove() {
-    Assert(curr->next != NULL, "No element");
+    //Assert(curr->next != NULL, "No element");
     E it = curr->next->element; // Remember value
     Link<E>* ltemp = curr->next; // Remember link node
     if (tail == curr->next) tail = curr; // Reset tail
