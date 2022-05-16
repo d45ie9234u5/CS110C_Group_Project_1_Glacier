@@ -1,5 +1,5 @@
-#ifndef DLLIST_H
-#define DLLIST_H
+#ifndef LLIST_H
+#define LLIST_H
 
 // From the software distribution accompanying the textbook
 // "A Practical Introduction to Data Structures and Algorithm Analysis,
@@ -7,19 +7,18 @@
 // Source code Copyright (C) 2007-2011 by Clifford A. Shaffer.
 
 #include "list.h"
-#include "dlink.h"
+#include "link.h"
 #include <iostream>
 
-// Doubly Linked list implementation
-template <typename E> class DLList: public List<E> {
+// Linked list implementation
+template <typename E> class LList: public List<E> {
 private:
-  DLink<E>* head; // Pointer to list header
-  DLink<E>* tail; // Pointer to last element
-  DLink<E>* curr; // Access to current element
+  Link<E>* head; // Pointer to list header
+  Link<E>* tail; // Pointer to last element
+  Link<E>* curr; // Access to current element
   int cnt; // Size of list
   void init() { // Initialization helper method
-    curr = head = new DLink<E>;
-    head->next = tail = new DLink<E>(head, NULL);
+    curr = tail = head = new Link<E>;
     cnt = 0;
   }
   void removeall() { // Return link nodes to free store
@@ -30,10 +29,10 @@ private:
       }
   }
 public:
-  DLList(int size = 10) {
-    init(); // Constructor. Replace defaultSize (now 10) with the default you want otherwise leave empty
+  LList(int size = 10) {
+    init(); // Constructor replace defaultSize (now 10) with the default you want otherwise leave empty
   }
-  ~DLList() { // Be very careful when you copy from pdf the tilde will not get copied properly so be sure to replace with actual
+  ~LList() { // Be very careful when you copy from pdf the tilde will not get copied properly so be sure to replace with actual
     removeall(); // Destructor
   }
   void print() const; // Print list contents
@@ -43,36 +42,27 @@ public:
   }
   // Insert "it" at current position
   void insert(const E& it) {
-    curr = new DLink<E>(it, curr->prev, curr);
-    curr->next->prev = curr;// I had trouble getting the insert to work properly
-    cnt++; // As you woiuld see from the driver, it still work but there is a missed step
-    // Please let me know if anyone could fixed it
+    std::cout << "Its in" << std::endl;
 
+    curr->next = new Link<E>(it, curr->next);
+    if (tail == curr) tail = curr->next; // New tail
+    cnt++;
   }
-  // Append "it" to the end of the list.
-  void append(const E& it) {
-    tail->prev = tail->prev->next =
-        new DLink<E>(it, tail->prev, tail);
+  void append(const E& it) { // Append "it" to list
+    tail = tail->next = new Link<E>(it, NULL);
     cnt++;
   }
   // Remove and return current element
   E remove() {
-    if (curr->next == tail) // Nothing to remove
-      return 0;
+    Assert(curr->next != NULL, "No element");
     E it = curr->next->element; // Remember value
-    DLink<E>* ltemp = curr->next; // Remember link node
-    curr->next->next->prev = curr;
+    Link<E>* ltemp = curr->next; // Remember link node
+    if (tail == curr->next) tail = curr; // Reset tail
     curr->next = curr->next->next; // Remove from list
     delete ltemp; // Reclaim space
-    cnt--; // Decrements cnt
+    cnt--; // Decrements the count
     return it;
   }
-  // Move fence one step left; no change if left is empty
-  void prev() {
-    if (curr != head) // Can’t back up from list head
-      curr = curr->prev;
-  }
-
   // Place curr at list start
   void moveToStart() {
     curr = head;
@@ -81,7 +71,14 @@ public:
   void moveToEnd(){
     curr = tail;
   }
-
+  // Move curr one step left; no change if already at front
+  void prev() {
+    if (curr == head) return; // No previous element
+    Link<E>* temp = head;
+    // March down list until we find the previous element
+    while (temp->next!=curr) temp=temp->next;
+    curr = temp;
+  }
   // Move curr one step right; no change if already at end
   void next(){
     if (curr != tail) curr = curr->next;
@@ -90,7 +87,7 @@ public:
     return cnt; } // Return length
   // Return the position of the current element
   int currPos() const {
-    DLink<E>* temp = head;
+    Link<E>* temp = head;
     int i;
     for (i=0; curr != temp; i++)
       temp = temp->next;
@@ -98,21 +95,33 @@ public:
   }
   // Move down list to "pos" position
   void moveToPos(int pos) {
-    //Assert(((pos>=0)&&(pos<=cnt)), "Position out of range");
+    //Assert ((pos>=0)&&(pos<=cnt), "Position out of range");
     curr = head;
     for(int i=0; i<pos; i++) curr = curr->next;
   }
   const E& getValue() const { // Return current element
-    Assert(curr->next != NULL, "No value");
+    //Assert(curr->next != NULL, "No value");
     return curr->next->element;
   }
-
   void reverse(){
+    LList<E> result(10);
+    E it;
+    for (int i = 0; i < 8; i++) {
+        curr = head;
 
+    //while (curr != NULL) {
+        it = remove();
+        result.insert(it);
+        //cout << "Its in" << endl;
+
+       }
+    curr = head;
+    this->head = result.head;
   }
   bool isAtEnd() { return curr == tail; }
 
 };
 
 
-#endif // DLLIST_H
+
+#endif // LLIST_H

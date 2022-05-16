@@ -90,7 +90,7 @@
 //
 // 1. Definition and implementation of simple_stats class
 //    a. Private members:
-//          1. data_obj: doubly linked list std:pair auto value, int count
+//          1. data_obj: linked list std:pair auto value, int count
 //          2. data_mean: mean of data set
 //          3. data_sd: standard deviation of data set
 //          4. data_min: minimum value in data set
@@ -138,27 +138,27 @@
 #ifndef SIMPLE_STAT_H
 #define SIMPLE_STAT_H
 #include <set>
-#include <dllist.h>
-template <class L, class N>
-class Simple_stat {
+#include <llist.h>
+
+template <class L, class N> class Simple_stat {
 private:
-    DLList<std::pair<N, int>>* data_obj;
+    LList<std::pair<N, int>>* data_obj;
     double data_mean = 0.0;
     double data_sd = 0.0;
-    N data_min = 0.0;
-    N data_max = 0.0;
-    N data_sum = 0.0;
+    double data_min = 0.0;
+    double data_max = 0.0;
+    double data_sum = 0.0;
     int data_count = 0;
 
     void calc_stats(N new_element) {
         data_sum += new_element;
         data_count++;
         data_mean = data_sum/data_count*1.0;
-        data_sd = sqrt(data_sd + ((pow(new_element - data_mean, 2))
-                  /data_count));
-        if(this->data_obj.length() == 0 || new_element < data_min)
+//        data_sd = sqrt(data_sd + ((pow(new_element - data_mean, 2))
+//                  /data_count));
+        if(this->data_obj->length() == 0 || new_element < data_min)
             data_min = new_element;
-        if(this->data_obj.length() == 0 || new_element > data_max)
+        if(this->data_obj->length() == 0 || new_element > data_max)
             data_max = new_element;
     }
 
@@ -166,10 +166,12 @@ private:
 
 public:
     Simple_stat(){
-        new DLList(data_obj());
+        new LList(data_obj);
     }
 
-    Simple_stat(L data_feed){
+
+    Simple_stat(L data_feed, N){
+        new LList(data_obj);
         feed(data_feed);
     }
 
@@ -190,13 +192,14 @@ public:
     }
 
     void append(N num){
-        if (search(num, this->data_obj) != std::pair(0,0)) {
-                    this->data_obj.second++;
-                    calc_stats(num);
-                    return;
-                }
-
-        this->data_obj.append(std::pair(num,1));
+//        if (search(num) != -1) {
+//            this->data_obj->getValue();
+//            calc_stats(num);
+//            return;
+//        }
+        std::cout << num << std::endl;
+        this->data_obj->insert(std::pair(num,1));
+        this->data_obj->next();
         calc_stats(num);
     }
 
@@ -221,20 +224,20 @@ public:
         data_max = NULL;
     }
 
-    std::pair<int, int> search(N num){
-        if (this->data_obj.length() > 0) {
+    int search(N num){
+        std::cout << "The number we are searching for is: " << num;
+        if (this->data_obj->length() > 0) {
             if ((num - data_min) >= 1e-9 || (num - data_max) <= 1e-9) {
-                for (auto i:data_obj) {
+                for (int i = 0; i < this->data_obj->length(); i++) {
                     // check if num is in data_obj, require checking for double
                     // precision on equality
-                    if (abs(num - i.first) < 1e-9) {
-                        return std::pair(this->data_obj->currPos(),
-                                         this->data_obj.second);
+                    if ((num - this->data_obj->currPos()) < 1e-9) {
+                        return this->data_obj->currPos();
                     }
                 }
             }
         }
-        return std::pair(0,0);
+        return -1;
     }
 
     int length_unique() {
@@ -258,10 +261,9 @@ public:
         }
     }
 
-
-    void feed(const L &data_feed){
+    void feed(L data_feed){
         for (auto num = data_feed.begin(); num != data_feed.end();++num){
-            append(num);
+            append(*num);
         }
     }
 

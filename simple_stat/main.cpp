@@ -20,8 +20,8 @@ int main() {
         int_vec.push_back(int_distribution(generator));
     }
     Simple_stat<std::vector<int>,int> *simpstat;
-    simpstat = new Simple_stat<std::vector<int>,int>;
-    simpstat->feed(int_vec);
+    simpstat = new Simple_stat(int_vec,0);
+    //simpstat->feed(int_vec);
     std::cout << "Length unique is: " << simpstat->length_unique() << std::endl;
 
 }
