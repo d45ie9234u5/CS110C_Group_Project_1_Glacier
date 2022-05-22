@@ -19,6 +19,7 @@ int main() {
     for (int i=0;i < 1000;i++) {
         int_vec.push_back(int_distribution(generator));
     }
+
     Simple_stat<std::vector<int>,int> *simpstat;
     simpstat = new Simple_stat(int_vec,0);
     //simpstat->feed(int_vec);

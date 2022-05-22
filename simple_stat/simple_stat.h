@@ -138,24 +138,26 @@
 #ifndef SIMPLE_STAT_H
 #define SIMPLE_STAT_H
 #include <set>
-#include <llist.h>
+#include <math.h>
+#include <dllist.h>
 
-template <class L, class N> class Simple_stat: public LList<L> {
+
+template <class L, class N> class Simple_stat: public DLList<N> {
 private:
-    LList<std::pair<N, int>>* data_obj;
+    DLList<N>* data_obj;
+    const double EQFL = 1e-9;
     double data_mean = 0.0;
     double data_sd = 0.0;
-    double data_min = 0.0;
-    double data_max = 0.0;
+    N data_min;
+    N data_max;
     double data_sum = 0.0;
     int data_count = 0;
 
     void calc_stats(N new_element) {
-        data_sum += new_element;
         data_count++;
         data_mean = data_sum/data_count*1.0;
-//        data_sd = sqrt(data_sd + ((pow(new_element - data_mean, 2))
-//                  /data_count));
+        data_sd = sqrt((data_sd + (std::pow(new_element - data_mean, 2))
+                  /data_count));
         if(this->data_obj->length() == 0 || new_element < data_min)
             data_min = new_element;
         if(this->data_obj->length() == 0 || new_element > data_max)
@@ -166,11 +168,12 @@ private:
 
 public:
     Simple_stat(){
-        new LList(data_obj);
+         data_obj = new DLList<N>;
     }
 
 
-    Simple_stat(L data_feed, N){
+    Simple_stat(L data_feed) {
+        std::cout << "Feeding in container of size ";
         feed(data_feed);
     }
 
@@ -178,36 +181,45 @@ public:
         empty();
     }
 
-    N& operator[](int indexnum) {
-        int index_sum = 0;
-        if (this->data_obj.length() > 0){
-            for (auto i:data_obj) {
-                index_sum += this->data_obj.second;
-                if (indexnum >= index_sum && indexnum <= index_sum){
-                    return this->data_obj.first;
-                }
-            }
-        }
+    auto operator[](int indexnum) {
+        this->data_obj->moveToPos(indexnum);
+        this->data_obj->getValue();
     }
 
-    void append(N num){
-//        if (search(num) != -1) {
-//            this->data_obj->getValue();
-//            calc_stats(num);
-//            return;
-//        }
+    void append(N num) {
+        std::pair found_index = search(num);
+        std::cout << found_index.first;
+        if (found_index.first != 0) {
+            //this->data_obj->moveToPos(found_index.first);
+            this->data_obj->insert(num);
+            calc_stats(num);
+            return;
+        }
         std::cout << num << std::endl;
-        this->data_obj->insert(std::pair(num,1));
-        this->data_obj->next();
+        if ((num - data_min) < EQFL){
+            this->data_obj->moveToStart();
+            this->data_obj->insert(num);
+        } else if ((num - data_max) > EQFL) {
+            this->data_obj->moveToEnd();
+            this->data_obj->insert(num);
+        } else if ((num - data_min) > EQFL && (num - data_max) < EQFL){
+            this->data_obj->moveToStart();
+            while (num < this->data_obj->getValue()){
+                this->data_obj->next();
+            }
+            this->data_obj->insert(num);
+        }
         calc_stats(num);
     }
 
     void removem(N m, int reps){
-        if (search(m, this->data_obj) != std::pair(0,0)) {
-                if (reps < this->data_obj.second) {
-                    this->data_obj.second -= reps;
-                } else if (reps == this->data_obj.second) {
+        std::pair found_index = search(m);
+        if (found_index.first != 0 && reps <= found_index.second) {
+                this->data_obj->moveToPos(found_index.first);
+                for (int i = found_index.first; i < found_index.first+reps; i++)
+                {
                     this->data_obj->remove();
+                    this->data_obj->next;
                 }
             }
     }
@@ -215,54 +227,71 @@ public:
     void empty() {
         delete data_obj;
         data_obj = NULL;
-        data_sum = NULL;
-        data_count = NULL;
-        data_mean = NULL;
-        data_sd = NULL;
-        data_min = NULL;
-        data_max = NULL;
+        data_sum = 0;
+        data_count = 0;
+        data_mean = 0;
+        data_sd = 0;
+        data_min = 0;
+        data_max = 0;
     }
 
-    int search(N num){
+    std::pair<int,int> search(N num){
         std::cout << "The number we are searching for is: " << num;
+        int numindex = 0;
+        int numcount = 0;
+
         if (this->data_obj->length() > 0) {
-            if ((num - data_min) >= 1e-9 || (num - data_max) <= 1e-9) {
-                for (int i = 0; i < this->data_obj->length(); i++) {
-                    // check if num is in data_obj, require checking for double
-                    // precision on equality
-                    if ((num - this->data_obj->currPos()) < 1e-9) {
-                        return this->data_obj->currPos();
+            if ((num - data_min) >= EQFL || (num - data_max) <= EQFL) {
+                while (num - this->data_obj->getValue() > EQFL){
+                    this->data_obj->next;
+                }
+                if (num - this->data_obj->getValue() <= EQFL) {
+                    numindex = this->data_obj->currPos();
+                    while (num - this->data_obj->getValue() <= EQFL) {
+                        numcount++;
+                        this->data_obj->next();
+                    }
+                }
+                return std::pair(numindex, numcount);
+
+                while (num - this->data_obj->getValue() < EQFL){
+                    this->data_obj->prev;
+                }
+                if (num - this->data_obj->getValue() <= EQFL) {
+                    numindex = this->data_obj->currPos();
+                    while (num - this->data_obj->getValue() <= EQFL) {
+                        numcount++;
+                        this->data_obj->prev();
                     }
                 }
             }
         }
-        return -1;
+
+        return std::pair(numindex,numcount);
     }
 
     int length_unique() {
-        return this->data_obj->length();
+        return unique_set().size();
     }
 
     int length_total() {
-        int sum_elements = 0;
-        if (this->data_obj.length() > 0){
-            for (auto i:data_obj) {
-                sum_elements += i.second;
-            }
-        }
-        return sum_elements;
+        return this->data_obj->length();
     }
 
     std::set<N> unique_set() {
         std::set<N> uni_set;
-        for (auto i:data_obj) {
-            uni_set.insert(i.first);
+        this->data_obj->moveToStart();
+        while (this->data_obj->currPos() < this->data_obj->length()) {
+            uni_set.insert(this->data_obj->getValue());
+            this->data_obj->next();
         }
+        return uni_set;
     }
 
     void feed(L data_feed){
-        for (auto num = data_feed.begin(); num != data_feed.end();++num){
-            append(*num);
+        for (auto& num:data_feed){
+            std::cout << num;
+            append(num);
         }
     }
 
@@ -274,11 +303,12 @@ public:
         return data_sd;
     }
 
-    N get_min(){
+
+    auto get_min(){
         return data_min;
     }
 
-    N get_max(){
+    auto get_max(){
         return data_max;
     }
 
