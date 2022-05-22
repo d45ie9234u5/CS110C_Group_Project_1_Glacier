@@ -54,7 +54,7 @@ public:
   }
   // Remove and return current element
   E remove() {
-    Assert(curr->next != NULL, "No element");
+    //Assert(curr->next != NULL, "No element");
     E it = curr->next->element; // Remember value
     Link<E>* ltemp = curr->next; // Remember link node
     if (tail == curr->next) tail = curr; // Reset tail
@@ -95,12 +95,12 @@ public:
   }
   // Move down list to "pos" position
   void moveToPos(int pos) {
-    Assert ((pos>=0)&&(pos<=cnt), "Position out of range");
+    //Assert ((pos>=0)&&(pos<=cnt), "Position out of range");
     curr = head;
     for(int i=0; i<pos; i++) curr = curr->next;
   }
   const E& getValue() const { // Return current element
-    Assert(curr->next != NULL, "No value");
+    //Assert(curr->next != NULL, "No value");
     return curr->next->element;
   }
   void reverse(){

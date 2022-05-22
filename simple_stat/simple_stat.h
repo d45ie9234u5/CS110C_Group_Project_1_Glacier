@@ -154,9 +154,11 @@ private:
 
     void calc_stats(N new_element) {
         data_count++;
+        data_sum += new_element;
         data_mean = data_sum/data_count*1.0;
-        data_sd = sqrt((data_sd + (std::pow(new_element - data_mean, 2))
-                  /data_count));
+
+        data_sd = sqrt((std::pow((new_element - data_mean), 2))
+                  /data_count);
         if(this->data_obj->length() == 1 || new_element < data_min) {
             data_min = new_element;
             std::cout << "data_min" << data_min << std::endl;
@@ -201,17 +203,21 @@ public:
             return;
         }
         std::cout << num << std::endl;
-        if (num <= data_min || data_obj->length() == 0){
+        if (num < data_min || data_obj->length() == 0){
             this->data_obj->moveToStart();
             std::cout << "Moving to start." << std::endl;
             std::cout << "Inserting " << num << " at position "
                       << this->data_obj->currPos() << std::endl;
             this->data_obj->insert(num);
-        } else if (num >= data_max) {
-            this->data_obj->moveToPos(this->data_obj->length());
+            calc_stats(num);
+            return;
+        } else if (num > data_max) {
+            this->data_obj->moveToEnd();
             std::cout << "Appending " << num << " at position "
                       << this->data_obj->currPos() << std::endl;
-            this->data_obj->append(num);
+            this->data_obj->insert(num);
+            calc_stats(num);
+            return;
         } else if (num > data_min && num < data_max){
             this->data_obj->moveToStart();
             std::cout << "Moving to start." << std::endl;
@@ -219,12 +225,13 @@ public:
                    this->data_obj->currPos() < this->data_obj->length()) {
                     this->data_obj->next();
                 }
-        }
             std::cout << "Inserting " << num << " at position "
                       << this->data_obj->currPos() << std::endl;
             this->data_obj->insert(num);
 
-        calc_stats(num);
+            calc_stats(num);
+        }
+
     }
 
     void removem(N m, int reps){
@@ -255,29 +262,24 @@ public:
         int numindex = 0;
         int numcount = 0;
 
-        if (this->data_obj->length() > 0 && num > data_min && num < data_max) {
+        if (this->data_obj->length() > 0
+                && num >= data_min && num <= data_max) {
             this->data_obj->moveToStart();
+            std::cout << "Index: " << this->data_obj->currPos()
+                      << " Value: " << this->data_obj->getValue()
+                      << " length: " << this->data_obj->length()
+                      << std::endl;
 
             for (int i = 0; i < this->data_obj->length();i++) {
-                std::cout << "Index: " << this->data_obj->currPos()
-                          << " Value: " << this->data_obj->getValue()
-                          << " length: " << this->data_obj->length()
-                          << std::endl;
 
                 if (num == this->data_obj->getValue()) {
-                    std::cout << "Found it!" << std::endl;
                     if (numcount == 0) {
                         numcount++;
                         numindex = this->data_obj->currPos();
-                        std::cout << "Duplicate found at: " << numindex
-                                  << std::endl;
                     }
                     numcount++;
                 }
-                std::cout << "NEXT" << std::endl;
                 this->data_obj->next();
-                std::cout << "AFTER NEXT" << std::endl;
-
             }
 //            if ((num - data_min) >= EQFL && (num - data_max) <= EQFL) {
 //                std::cout << num << ": " << this->data_obj->getValue();
