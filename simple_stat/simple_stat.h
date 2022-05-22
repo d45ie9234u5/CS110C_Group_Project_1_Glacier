@@ -55,8 +55,9 @@
 //        for feed, standard C++ container date type containing integer or
 //           double values for elements
 //        for removem: a data element and number of repetitions of that element
-// output: returns from search, length_unique, length_total, unique_set and
-//    getters
+//        for search: the value to search for
+// output: returns pair of integers from search, length_unique, length_total,
+//         unique_set and getters
 // restrictions:
 //    The principle data structure must be the most qualified linear structure
 //       we discussed so far in the class. So in the implementation you must
@@ -123,9 +124,7 @@
 //                       data_obj.count, delete data_obj object, else if
 //                       < data_obj.count -= m, else return not error
 //          6.  empty: clear data_obj, and all stats
-//          7.  search: iterate through data_obj.value, increment index_count
-//                      with data_obj.count and if found return index_count-1
-//                      and data_obj.count
+//          7.  search: check if key to
 //          8.  length_unique: return data_obj.length
 //          9.  length_total: return data_count
 //          10. unique_set: iterate through data_obj.value and append to set.
@@ -139,17 +138,17 @@
 #define SIMPLE_STAT_H
 #include <set>
 #include <math.h>
-#include <dllist.h>
+#include <llist.h>
 
 
-template <class L, class N = typename L::value_type> class Simple_stat: public DLList<N> {
+template <class L, class N = typename L::value_type> class Simple_stat: public LList<N> {
 private:
-    DLList<N>* data_obj;
+    LList<N>* data_obj;
     const double EQFL = 1e-9;
     double data_mean = 0.0;
     double data_sd = 0.0;
-    N data_min;
-    N data_max;
+    N data_min = 0;
+    N data_max = 0;
     double data_sum = 0.0;
     int data_count = 0;
 
@@ -158,22 +157,26 @@ private:
         data_mean = data_sum/data_count*1.0;
         data_sd = sqrt((data_sd + (std::pow(new_element - data_mean, 2))
                   /data_count));
-        if(this->data_obj->length() == 0 || new_element < data_min)
+        if(this->data_obj->length() == 1 || new_element < data_min) {
             data_min = new_element;
-        if(this->data_obj->length() == 0 || new_element > data_max)
+            std::cout << "data_min" << data_min << std::endl;
+        }
+        if(this->data_obj->length() == 1 || new_element > data_max) {
             data_max = new_element;
+            std::cout << "data_max" << data_max << std::endl;
+        }
     }
 
 
 
 public:
     Simple_stat(){
-         data_obj = new DLList<N>;
+         data_obj = new LList<N>;
     }
 
 
-    Simple_stat(L& data_feed) {
-        std::cout << "Feeding in container of size ";
+    Simple_stat(const L& data_feed) {
+        data_obj = new LList<N>;
         feed(data_feed);
     }
 
@@ -188,27 +191,39 @@ public:
 
     void append(N num) {
         std::pair found_index = search(num);
-        std::cout << found_index.first;
-        if (found_index.first != 0) {
-            //this->data_obj->moveToPos(found_index.first);
+        std::cout << "Index: " << found_index.first << std::endl;
+        if (found_index.first > 0) {
+            this->data_obj->moveToPos(found_index.first);
+            std::cout << "Inserting at position " << this->data_obj->currPos()
+                      << std::endl;
             this->data_obj->insert(num);
             calc_stats(num);
             return;
         }
         std::cout << num << std::endl;
-        if ((num - data_min) < EQFL){
+        if (num <= data_min || data_obj->length() == 0){
             this->data_obj->moveToStart();
+            std::cout << "Moving to start." << std::endl;
+            std::cout << "Inserting " << num << " at position "
+                      << this->data_obj->currPos() << std::endl;
             this->data_obj->insert(num);
-        } else if ((num - data_max) > EQFL) {
-            this->data_obj->moveToEnd();
-            this->data_obj->insert(num);
-        } else if ((num - data_min) > EQFL && (num - data_max) < EQFL){
+        } else if (num >= data_max) {
+            this->data_obj->moveToPos(this->data_obj->length());
+            std::cout << "Appending " << num << " at position "
+                      << this->data_obj->currPos() << std::endl;
+            this->data_obj->append(num);
+        } else if (num > data_min && num < data_max){
             this->data_obj->moveToStart();
-            while (num < this->data_obj->getValue()){
-                this->data_obj->next();
-            }
-            this->data_obj->insert(num);
+            std::cout << "Moving to start." << std::endl;
+            while (num < this->data_obj->getValue() &&
+                   this->data_obj->currPos() < this->data_obj->length()) {
+                    this->data_obj->next();
+                }
         }
+            std::cout << "Inserting " << num << " at position "
+                      << this->data_obj->currPos() << std::endl;
+            this->data_obj->insert(num);
+
         calc_stats(num);
     }
 
@@ -236,37 +251,68 @@ public:
     }
 
     std::pair<int,int> search(N num){
-        std::cout << "The number we are searching for is: " << num;
+        std::cout << "The number we are searching for is: " << num << std::endl;
         int numindex = 0;
         int numcount = 0;
 
-        if (this->data_obj->length() > 0) {
-            if ((num - data_min) >= EQFL || (num - data_max) <= EQFL) {
-                while (num - this->data_obj->getValue() > EQFL){
-                    this->data_obj->next();
-                }
-                if (num - this->data_obj->getValue() <= EQFL) {
-                    numindex = this->data_obj->currPos();
-                    while (num - this->data_obj->getValue() <= EQFL) {
-                        numcount++;
-                        this->data_obj->next();
-                    }
-                }
-                return std::pair(numindex, numcount);
+        if (this->data_obj->length() > 0 && num > data_min && num < data_max) {
+            this->data_obj->moveToStart();
 
-                while (num - this->data_obj->getValue() < EQFL){
-                    this->data_obj->prev();
-                }
-                if (num - this->data_obj->getValue() <= EQFL) {
-                    numindex = this->data_obj->currPos();
-                    while (num - this->data_obj->getValue() <= EQFL) {
+            for (int i = 0; i < this->data_obj->length();i++) {
+                std::cout << "Index: " << this->data_obj->currPos()
+                          << " Value: " << this->data_obj->getValue()
+                          << " length: " << this->data_obj->length()
+                          << std::endl;
+
+                if (num == this->data_obj->getValue()) {
+                    std::cout << "Found it!" << std::endl;
+                    if (numcount == 0) {
                         numcount++;
-                        this->data_obj->prev();
+                        numindex = this->data_obj->currPos();
+                        std::cout << "Duplicate found at: " << numindex
+                                  << std::endl;
                     }
+                    numcount++;
                 }
+                std::cout << "NEXT" << std::endl;
+                this->data_obj->next();
+                std::cout << "AFTER NEXT" << std::endl;
+
             }
-        }
+//            if ((num - data_min) >= EQFL && (num - data_max) <= EQFL) {
+//                std::cout << num << ": " << this->data_obj->getValue();
+//                while (num - this->data_obj->getValue() > EQFL){
+//                    this->data_obj->next();
+//                }
+//                if (num - this->data_obj->getValue() <= EQFL) {
+//                    std::cout << num << ": " << this->data_obj->getValue();
+//                    numindex = this->data_obj->currPos();
+//                    while (num - this->data_obj->getValue() <= EQFL) {
+//                        numcount++;
+//                        std::cout << num << ": " << this->data_obj->getValue();
+//                        this->data_obj->next();
+//                    }
+//                }
+//                std::cout << "Search found " << numindex << " " << numcount <<
+//                             std::endl;
+//                return std::pair(numindex,numcount);
 
+//                while (num - this->data_obj->getValue() < EQFL){
+//                    std::cout << num << ": " << this->data_obj->getValue();
+//                    this->data_obj->prev();
+//                }
+//                if (num - this->data_obj->getValue() <= EQFL) {
+//                    numindex = this->data_obj->currPos();
+//                    while (num - this->data_obj->getValue() <= EQFL) {
+//                        std::cout << num << ": " << this->data_obj->getValue();
+//                        numcount++;
+//                        this->data_obj->prev();
+//                    }
+//                }
+//            }
+        }
+        std::cout << "Search found " << numindex << " " << numcount <<
+                     std::endl;
         return std::pair(numindex,numcount);
     }
 
@@ -288,9 +334,9 @@ public:
         return uni_set;
     }
 
-    void feed(L data_feed){
+    void feed(const L& data_feed){
         for (auto& num:data_feed){
-            std::cout << num;
+            std::cout << "feeding " << num << std::endl;
             append(num);
         }
     }

@@ -22,7 +22,7 @@ int main() {
 
     Simple_stat<std::vector<int>> *simpstat;
     simpstat = new Simple_stat(int_vec);
-    //simpstat->feed(int_vec);
+
     std::cout << "Length unique is: " << simpstat->length_unique() << std::endl;
 
 }

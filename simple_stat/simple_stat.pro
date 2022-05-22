@@ -18,5 +18,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     dlink.h \
     dllist.h \
+    link.h \
     list.h \
+    llist.h \
     simple_stat.h
