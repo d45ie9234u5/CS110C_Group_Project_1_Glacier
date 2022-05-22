@@ -142,7 +142,7 @@
 #include <dllist.h>
 
 
-template <class L, class N> class Simple_stat: public DLList<N> {
+template <class L, class N = typename L::value_type> class Simple_stat: public DLList<N> {
 private:
     DLList<N>* data_obj;
     const double EQFL = 1e-9;
@@ -172,7 +172,7 @@ public:
     }
 
 
-    Simple_stat(L data_feed) {
+    Simple_stat(L& data_feed) {
         std::cout << "Feeding in container of size ";
         feed(data_feed);
     }
@@ -243,7 +243,7 @@ public:
         if (this->data_obj->length() > 0) {
             if ((num - data_min) >= EQFL || (num - data_max) <= EQFL) {
                 while (num - this->data_obj->getValue() > EQFL){
-                    this->data_obj->next;
+                    this->data_obj->next();
                 }
                 if (num - this->data_obj->getValue() <= EQFL) {
                     numindex = this->data_obj->currPos();
@@ -255,7 +255,7 @@ public:
                 return std::pair(numindex, numcount);
 
                 while (num - this->data_obj->getValue() < EQFL){
-                    this->data_obj->prev;
+                    this->data_obj->prev();
                 }
                 if (num - this->data_obj->getValue() <= EQFL) {
                     numindex = this->data_obj->currPos();

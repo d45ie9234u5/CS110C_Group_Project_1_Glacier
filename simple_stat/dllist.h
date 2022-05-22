@@ -103,7 +103,7 @@ public:
     for(int i=0; i<pos; i++) curr = curr->next;
   }
   const E& getValue() const { // Return current element
-    Assert(curr->next != NULL, "No value");
+    //Assert(curr->next != NULL, "No value");
     return curr->next->element;
   }
 
