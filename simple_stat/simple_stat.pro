@@ -16,8 +16,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    dlink.h \
-    dllist.h \
     link.h \
     list.h \
     llist.h \
