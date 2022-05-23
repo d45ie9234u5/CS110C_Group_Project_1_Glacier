@@ -141,32 +141,40 @@
 #include <llist.h>
 
 
-template <class L, class N = typename L::value_type> class Simple_stat: public LList<N> {
+template <class L, class N = typename L::value_type> class Simple_stat:
+        public LList<N> {
 private:
     LList<N>* data_obj;
     const double EQFL = 1e-9;
     double data_mean = 0.0;
+    double data_sqsum = 0.0;
+    double data_var = 0.0;
     double data_sd = 0.0;
     N data_min = 0;
     N data_max = 0;
     double data_sum = 0.0;
-    int data_count = 0;
 
-    void calc_stats(N new_element) {
-        data_count++;
+    void calc_stats(N new_element, int addval) {
         data_sum += new_element;
-        data_mean = data_sum/data_count*1.0;
+        data_mean = data_sum/this->data_obj->length()*1.0;
 
-        data_sd = sqrt((std::pow((new_element - data_mean), 2))
-                  /data_count);
-        if(this->data_obj->length() == 1 || new_element < data_min) {
-            data_min = new_element;
-            std::cout << "data_min" << data_min << std::endl;
+        if (addval == 1) {
+            data_sqsum += pow(new_element,2);
+            if(this->data_obj->length() == 1 || new_element < data_min) {
+                data_min = new_element;
+            }
+            if(this->data_obj->length() == 1 || new_element > data_max) {
+                data_max = new_element;
+            }
+        } else {
+            data_sqsum -= pow(new_element,2);
         }
-        if(this->data_obj->length() == 1 || new_element > data_max) {
-            data_max = new_element;
-            std::cout << "data_max" << data_max << std::endl;
-        }
+
+        data_var = (data_sqsum / this->data_obj->length()*1.0)
+                - pow((data_mean),2);
+        data_sd = sqrt(data_var);
+
+
     }
 
 
@@ -193,64 +201,63 @@ public:
 
     void append(N num) {
         std::pair found_index = search(num);
-        std::cout << "Index: " << found_index.first << std::endl;
-        if (found_index.first > 0) {
+        if (found_index.second > 0) {
             this->data_obj->moveToPos(found_index.first);
-            std::cout << "Inserting at position " << this->data_obj->currPos()
-                      << std::endl;
             this->data_obj->insert(num);
-            calc_stats(num);
+            calc_stats(num,1);
             return;
-        }
-        std::cout << num << std::endl;
-        if (num < data_min || data_obj->length() == 0){
+        } else if (num < data_min || this->data_obj->length() == 0){
             this->data_obj->moveToStart();
-            std::cout << "Moving to start." << std::endl;
-            std::cout << "Inserting " << num << " at position "
-                      << this->data_obj->currPos() << std::endl;
             this->data_obj->insert(num);
-            calc_stats(num);
+            calc_stats(num,1);
             return;
         } else if (num > data_max) {
             this->data_obj->moveToEnd();
-            std::cout << "Appending " << num << " at position "
-                      << this->data_obj->currPos() << std::endl;
             this->data_obj->insert(num);
-            calc_stats(num);
+            calc_stats(num,1);
             return;
-        } else if (num > data_min && num < data_max){
+        } else if (num > data_min && num < data_max) {
             this->data_obj->moveToStart();
-            std::cout << "Moving to start." << std::endl;
-            while (num < this->data_obj->getValue() &&
-                   this->data_obj->currPos() < this->data_obj->length()) {
+            while (this->data_obj->currPos() < this->data_obj->length()) {
                     this->data_obj->next();
+                    if (num < this->data_obj->getValue()) {
+                        break;
+                    }
                 }
-            std::cout << "Inserting " << num << " at position "
-                      << this->data_obj->currPos() << std::endl;
             this->data_obj->insert(num);
-
-            calc_stats(num);
+            calc_stats(num,1);
+            return;
         }
-
     }
 
     void removem(N m, int reps){
         std::pair found_index = search(m);
-        if (found_index.first != 0 && reps <= found_index.second) {
+
+        if (reps <= found_index.second) {
                 this->data_obj->moveToPos(found_index.first);
-                for (int i = found_index.first; i < found_index.first+reps; i++)
+                for (int i = found_index.first; i < found_index.first+reps;i++)
                 {
+                    N delitem = this->data_obj->getValue();
                     this->data_obj->remove();
-                    this->data_obj->next;
+                    calc_stats(m,0);
+                    this->data_obj->next();
                 }
-            }
+        }
+
+        if (reps == found_index.second && m == data_min) {
+            this->data_obj->moveToStart();
+            data_min = this->data_obj->getValue();
+        } else if (reps == found_index.second && m == data_max) {
+            this->data_obj->moveToEnd();
+            data_max = this->data_obj->getValue();
+        }
+
     }
 
     void empty() {
         delete data_obj;
         data_obj = NULL;
         data_sum = 0;
-        data_count = 0;
         data_mean = 0;
         data_sd = 0;
         data_min = 0;
@@ -258,63 +265,27 @@ public:
     }
 
     std::pair<int,int> search(N num){
-        std::cout << "The number we are searching for is: " << num << std::endl;
         int numindex = 0;
         int numcount = 0;
 
         if (this->data_obj->length() > 0
                 && num >= data_min && num <= data_max) {
             this->data_obj->moveToStart();
-            std::cout << "Index: " << this->data_obj->currPos()
-                      << " Value: " << this->data_obj->getValue()
-                      << " length: " << this->data_obj->length()
-                      << std::endl;
 
-            for (int i = 0; i < this->data_obj->length();i++) {
+            while (this->data_obj->currPos() < this->data_obj->length()) {
 
                 if (num == this->data_obj->getValue()) {
                     if (numcount == 0) {
-                        numcount++;
                         numindex = this->data_obj->currPos();
                     }
                     numcount++;
+                } else if (num < this->data_obj->getValue()) {
+                    return std::pair(numindex,numcount);
+                    break;
                 }
                 this->data_obj->next();
             }
-//            if ((num - data_min) >= EQFL && (num - data_max) <= EQFL) {
-//                std::cout << num << ": " << this->data_obj->getValue();
-//                while (num - this->data_obj->getValue() > EQFL){
-//                    this->data_obj->next();
-//                }
-//                if (num - this->data_obj->getValue() <= EQFL) {
-//                    std::cout << num << ": " << this->data_obj->getValue();
-//                    numindex = this->data_obj->currPos();
-//                    while (num - this->data_obj->getValue() <= EQFL) {
-//                        numcount++;
-//                        std::cout << num << ": " << this->data_obj->getValue();
-//                        this->data_obj->next();
-//                    }
-//                }
-//                std::cout << "Search found " << numindex << " " << numcount <<
-//                             std::endl;
-//                return std::pair(numindex,numcount);
-
-//                while (num - this->data_obj->getValue() < EQFL){
-//                    std::cout << num << ": " << this->data_obj->getValue();
-//                    this->data_obj->prev();
-//                }
-//                if (num - this->data_obj->getValue() <= EQFL) {
-//                    numindex = this->data_obj->currPos();
-//                    while (num - this->data_obj->getValue() <= EQFL) {
-//                        std::cout << num << ": " << this->data_obj->getValue();
-//                        numcount++;
-//                        this->data_obj->prev();
-//                    }
-//                }
-//            }
         }
-        std::cout << "Search found " << numindex << " " << numcount <<
-                     std::endl;
         return std::pair(numindex,numcount);
     }
 
@@ -338,7 +309,6 @@ public:
 
     void feed(const L& data_feed){
         for (auto& num:data_feed){
-            std::cout << "feeding " << num << std::endl;
             append(num);
         }
     }

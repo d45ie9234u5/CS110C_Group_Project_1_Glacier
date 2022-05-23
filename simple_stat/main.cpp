@@ -13,7 +13,8 @@ void printstats(Simple_stat<N>& simp) {
     std::cout << "Mean is: " << simp.get_mean() << std::endl;
     std::cout << "Minimum value is: " << simp.get_min() << std::endl;
     std::cout << "Maximum value is: " << simp.get_max() << std::endl;
-    std::cout << "Standar deviation is: " << simp.get_SD() << std::endl;
+    std::cout << "Standard deviation is: " << simp.get_SD() << std::endl;
+    std::cout << std::endl;
 }
 
 int main() {
@@ -29,18 +30,16 @@ int main() {
         int_vec.push_back(int_distribution(generator));
     }
 
-
     Simple_stat<std::vector<int>> *simpstat;
     simpstat = new Simple_stat(int_vec);
     printstats(*simpstat);
+
     std::uniform_int_distribution<int> int_distribution2 (90, 100);
     for (int i=0;i < 10;i++) {
         int_vec2.push_back(int_distribution2(generator));
     }
     simpstat->feed(int_vec2);
     printstats(*simpstat);
-    delete simpstat;
-
 
     std::uniform_real_distribution<double> dbl_distribution (90.0, 100.0);
     for (int i=0;i < 1000;i++) {
@@ -51,6 +50,12 @@ int main() {
     simpstatdbl = new Simple_stat(dbl_vec);
     printstats(*simpstatdbl);
     delete simpstatdbl;
+
+    std::cout << "Removing 10 duplicates of the number 90 from integer list." <<
+                 std::endl;
+
+    simpstat->removem(90,10);
+    printstats(*simpstat);
 }
 
 

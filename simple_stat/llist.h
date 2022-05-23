@@ -42,7 +42,6 @@ public:
   }
   // Insert "it" at current position
   void insert(const E& it) {
-    std::cout << "Its in" << std::endl;
 
     curr->next = new Link<E>(it, curr->next);
     if (tail == curr) tail = curr->next; // New tail
