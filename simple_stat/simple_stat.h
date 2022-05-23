@@ -155,11 +155,13 @@ private:
     double data_sum = 0.0;
 
     void calc_stats(N new_element, int addval) {
-        data_sum += new_element;
-        data_mean = data_sum/this->data_obj->length()*1.0;
+        double delta_mean = new_element - data_mean;
+
 
         if (addval == 1) {
-            data_sqsum += pow(new_element,2);
+            data_sum += new_element;
+            data_mean += delta_mean/this->data_obj->length()*1.0;
+            data_sqsum += delta_mean * (new_element - data_mean);
             if(this->data_obj->length() == 1 || new_element < data_min) {
                 data_min = new_element;
             }
@@ -167,12 +169,12 @@ private:
                 data_max = new_element;
             }
         } else {
-            data_sqsum -= pow(new_element,2);
+            data_sum -= new_element;
+            data_mean -= delta_mean/this->data_obj->length()*1.0;
+            data_sqsum -= delta_mean * (new_element - data_mean);
         }
 
-        data_var = (data_sqsum / this->data_obj->length()*1.0)
-                - pow((data_mean),2);
-        data_sd = sqrt(data_var);
+        data_sd = sqrt(data_sqsum/data_obj->length()*1.0);
 
 
     }
