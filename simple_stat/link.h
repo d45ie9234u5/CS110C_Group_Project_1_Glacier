@@ -23,7 +23,7 @@ public:
   Link(Link* nextval =NULL) {
     next = nextval;
   }
-  void* operator new(size_t) { // Overloaded new operator
+  void* operator new(size_t) { // Overload new operator
     if (freelistSL == NULL) return ::new Link; // Create space
     Link<E>* temp = freelistSL; // Can take from freelist
     freelistSL = freelistSL->next;
