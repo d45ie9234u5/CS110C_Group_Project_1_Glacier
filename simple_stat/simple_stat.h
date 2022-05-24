@@ -50,7 +50,7 @@
 //       get_max: returns the maximum data item in the current entire data
 //          set
 //
-// Understand
+// Understand:
 // input: for append, integer or double
 //        for feed, standard C++ container date type containing integer or
 //           double values for elements
@@ -82,13 +82,13 @@
 //    The data is heavily duplicated. In situations like this we discussed
 //       storing pointers as a solution in the class
 //    You are not allowed to use any C/C++ math libraries
+// example: 
 //
-// Match
+// Match:
 // Class for data object including vector for data, statistics variables
 // Generic iterator for feed method that calls append method
 //
-// Plan
-//
+// Plan:
 // 1. Definition and implementation of simple_stats class
 //    a. Private members:
 //          1. data_obj: linked list std:pair auto value, int count
@@ -134,6 +134,7 @@
 //          13. get_sd: return data_sd.
 //          14. get_min: return data_min.
 //          15. get_max: return data_max.
+
 #ifndef SIMPLE_STAT_H
 #define SIMPLE_STAT_H
 #include <set>
