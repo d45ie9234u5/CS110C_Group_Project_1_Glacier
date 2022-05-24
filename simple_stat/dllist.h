@@ -73,11 +73,11 @@ public:
       curr = curr->prev;
   }
 
-  // Place curr at list start
+  // Place curr at the list start
   void moveToStart() {
     curr = head;
   }
-  // Place curr at list end
+  // Place curr at the list end
   void moveToEnd(){
     curr = tail;
   }
