@@ -81,8 +81,7 @@
 //       removal
 //    The data is heavily duplicated. In situations like this we discussed
 //       storing pointers as a solution in the class
-//    You are not allowed to use any C/C++ math libraries
-// example: 
+//    You are not allowed to use any C/C++ math libraries 
 //
 // Match:
 // Class for data object including vector for data, statistics variables
