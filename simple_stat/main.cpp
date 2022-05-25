@@ -6,6 +6,7 @@
 #include <random>
 #include <algorithm>
 
+// Function prints stats of Simple_stat class of generic type.
 template <typename N>
 void printstats(Simple_stat<N>& simp) {
     std::cout << "Length unique is: " << simp.length_unique() << std::endl;
@@ -23,8 +24,10 @@ int main() {
     std::vector<int> int_vec2;
     std::vector<double> dbl_vec;
 
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count(); // Seed value is drawn from current time to guarantee a different seed value
-    std::default_random_engine generator (seed); // Default random number generator algorithm.
+    // Seed value is drawn from current time to guarantee a different seed value
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    // Default random number generator algorithm.
+    std::default_random_engine generator (seed);
     std::uniform_int_distribution<int> int_distribution (90, 100);
     for (int i=0;i < 1000;i++) {
         int_vec.push_back(int_distribution(generator));

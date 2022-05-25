@@ -20,10 +20,10 @@
 // In addition to above mentioned states, your data structure must support
 //    below operations:
 //    Update operations: not frequent compared to  frequent demands of
-//       statistics. Therefore, okey if they are expensive operations like
+//       statistics. Therefore, okay if they are expensive operations like
 //       O(n):
-//       append: append new data.  Update exist number of duplication or append
-//          from the end if new
+//       append: append new data.  Update existing number of duplication or
+//          append from the end if new
 //       removem: remove m number of a given data element only if m is less
 //          than or equal to current amount of repetitions, n
 //       empty: delete all data
@@ -56,8 +56,10 @@
 //           double values for elements
 //        for removem: a data element and number of repetitions of that element
 //        for search: the value to search for
-// output: returns pair of integers from search, length_unique, length_total,
-//         unique_set and getters
+// output: returns pair of integers from search, single integer for
+//         length_unique and length_total, a set for unique_set and doubles
+//         for all of the statistics (except minimum and maximum which will
+//         be generic types.)
 // restrictions:
 //    The principle data structure must be the most qualified linear structure
 //       we discussed so far in the class. So in the implementation you must
@@ -90,23 +92,26 @@
 // Plan:
 // 1. Definition and implementation of simple_stats class
 //    a. Private members:
-//          1. data_obj: linked list std:pair auto value, int count
-//          2. data_mean: mean of data set
-//          3. data_sd: standard deviation of data set
-//          4. data_min: minimum value in data set
-//          5. data_max: maximum value in data set
-//          6. data_sum: sum of all values in set
-//          7. data_count: count of all elements
-//          8. calc_stats(new_element):
-//                data_sum += new_element
-//                data_count += 1
-//                data_mean = data_sum/data_count
+//          1. data_obj: linked list of generic type
+//          2. data_mean: mean of all values in data object
+//          3. data_sd: standard deviation of all values in data object
+//          4. data_min: minimum value in data object
+//          5. data_max: maximum value in data object
+//          6. data_sum: sum of all values in data object
+//          7. data_sqsum: the square sum of all values in data object
+//          8. data_var: the variance of all values in data object
+//          9. calc_stats(new_element, toggle value for add or delete of value):
+//                delta_mean = new_element - data_mean;
+//                data_sum if add (+= new_element) if delete (-= new_element)
+//                data_mean = if add (+= delta mean/data_obj.length())
+//                            if delete (-= delta mean/data_obj.length())
+//                data_sqsum = add (+=delta mean * (new_element - new data_mean)
+//                          delete (-=delta mean * (new_element - new data_mean)
 //                data_sd =
-//                  sqrt((data_sd + (pow(new_element - data_mean, 2))/
-//                  data_count)
-//                data_min =
+//                  sqrt((data_sqsum/data_obj.length())
+//                data_min (also check for new minimum on removem function) =
 //                  if new_element < data_min then data_min = new_element
-//                data_max =
+//                data_max (also check for new minimum on removem function)
 //                  if new_element > data_max then data_max = new_element
 //    b. Public members:
 //          1.  default constructor: create empty data object
@@ -115,18 +120,18 @@
 //                 than return NULL, else iterate through data_obj.count until
 //                 index supplied is within range and return the data_obj.value
 //                 for that index value.
-//          4.  append: iterate through data_obj.value, if found, increment
-//                      data_obj.count, calc_stats.  else append data_obj and
-//                      set data_obj.count = 1
-//          5.  removem: check if value is >= data_min and <= data_max, then
-//                       iterate through data_obj.value and if m =
-//                       data_obj.count, delete data_obj object, else if
-//                       < data_obj.count -= m, else return not error
+//          4.  append: search for new element in data_obj, if found, add within
+//                      range of duplicate, calc_stats.  else insert in correct
+//                      range within data_obj
+//          5.  removem: call search and check if repitions requested to be
+//                       removed is less than or equal to number of duplicates.
 //          6.  empty: clear data_obj, and all stats
-//          7.  search: check if key to
-//          8.  length_unique: return data_obj.length
-//          9.  length_total: return data_count
-//          10. unique_set: iterate through data_obj.value and append to set.
+//          7.  search: check if value is >= data_min and <= data_max, then
+//                       iterate through data_obj and then count duplicates and
+//                       return pair with index and number reps
+//          8.  length_unique: return unique_set.size()
+//          9.  length_total: return data_obj.length()
+//          10. unique_set: iterate through data_obj and append to set.
 //          11. feed: iterate through any data object and call append on each
 //              element
 //          12. get_mean: return data_mean.
@@ -144,24 +149,30 @@
 template <class L, class N = typename L::value_type> class Simple_stat:
         public LList<N> {
 private:
-    LList<N>* data_obj;
-    const double EQFL = 1e-9;
-    double data_mean = 0.0;
-    double data_sqsum = 0.0;
-    double data_var = 0.0;
-    double data_sd = 0.0;
-    N data_min = 0;
-    N data_max = 0;
-    double data_sum = 0.0;
+    LList<N>* data_obj;         // Linked list of generic type
+    double data_mean = 0.0;     // Mean of all values in data_obj
+    double data_sqsum = 0.0;    // Square of sums of all values in data_obj
+    double data_var = 0.0;      // Variance of all values in data_obj
+    double data_sd = 0.0;       // Standard deviation of all values in data_obj
+    N data_min = 0;             // Minimum value in data object
+    N data_max = 0;             // Maximum value in data object
+    double data_sum = 0.0;      // Sum of all values in data object
 
+    // input: new element that has been inserted into data object and toggle
+    //        value 1 for value that is added to object and 0 for value that is
+    //        deleted from object.
     void calc_stats(N new_element, int addval) {
+        // Delta of new element and the previous mean.
         double delta_mean = new_element - data_mean;
 
-
+        // Calculate stats if value is added to data object.
         if (addval == 1) {
             data_sum += new_element;
             data_mean += delta_mean/this->data_obj->length()*1.0;
             data_sqsum += delta_mean * (new_element - data_mean);
+            // data_min and data_max are recalcuated in removem function
+            // after checking if there are no duplicates left of value
+            // removed.
             if(this->data_obj->length() == 1 || new_element < data_min) {
                 data_min = new_element;
             }
@@ -169,6 +180,7 @@ private:
                 data_max = new_element;
             }
         } else {
+            // Calculate stats if value is removed from data object.
             data_sum -= new_element;
             data_mean -= delta_mean/this->data_obj->length()*1.0;
             data_sqsum -= delta_mean * (new_element - data_mean);
@@ -182,11 +194,13 @@ private:
 
 
 public:
+    // Default constructor
     Simple_stat(){
          data_obj = new LList<N>;
     }
 
-
+    // Constructor accepts data container of generic type and calls feed
+    // function to feed the values from container into linked list.
     Simple_stat(const L& data_feed) {
         data_obj = new LList<N>;
         feed(data_feed);
@@ -196,28 +210,32 @@ public:
         empty();
     }
 
+    // Moves position in linked list to requested index and returns value.
     auto operator[](int indexnum) {
         this->data_obj->moveToPos(indexnum);
-        this->data_obj->getValue();
+        return this->data_obj->getValue();
     }
 
+    // Calls search function to see if new value is in data object already and
+    // inserts the value in correct order and call calc_stats.
     void append(N num) {
         std::pair found_index = search(num);
+        // If value found already in object, insert the value at the found
+        // found index.
         if (found_index.second > 0) {
             this->data_obj->moveToPos(found_index.first);
             this->data_obj->insert(num);
-            calc_stats(num,1);
-            return;
+        // If the value is less than data_min or data object is empty, insert
+        // at start of data object.
         } else if (num < data_min || this->data_obj->length() == 0){
             this->data_obj->moveToStart();
             this->data_obj->insert(num);
-            calc_stats(num,1);
-            return;
+        // If the value is greater than data_max, insert at end of data object.
         } else if (num > data_max) {
             this->data_obj->moveToEnd();
             this->data_obj->insert(num);
-            calc_stats(num,1);
-            return;
+        // If the value is between data_min and data_max but not in data object
+        // insert in correct order so data remains sorted.
         } else if (num > data_min && num < data_max) {
             this->data_obj->moveToStart();
             while (this->data_obj->currPos() < this->data_obj->length()) {
@@ -227,14 +245,18 @@ public:
                     }
                 }
             this->data_obj->insert(num);
-            calc_stats(num,1);
-            return;
         }
+        calc_stats(num,1);
     }
 
+    // Searches for requested value in data object and removes requested number
+    // of duplicates if less or equal to number of duplicates in data object.
     void removem(N m, int reps){
         std::pair found_index = search(m);
 
+        // Number of duplicates requested to delete are less than or equal to
+        // found number of duplicates in data object of value, then remove
+        // that number of duplicates of value from data_object.
         if (reps <= found_index.second) {
                 this->data_obj->moveToPos(found_index.first);
                 for (int i = found_index.first; i < found_index.first+reps;i++)
@@ -246,6 +268,9 @@ public:
                 }
         }
 
+        // If the number of duplicates deleted are equal to all duplicates
+        // found then calculate new data_min or data_max if value deleted
+        // was one of those values.
         if (reps == found_index.second && m == data_min) {
             this->data_obj->moveToStart();
             data_min = this->data_obj->getValue();
@@ -266,17 +291,25 @@ public:
         data_max = 0;
     }
 
+    // Searches for the requested value in data object and return pair with
+    // firstvalue being index and second value being the number of repetitions
+    // of value in data object.
     std::pair<int,int> search(N num){
         int numindex = 0;
         int numcount = 0;
 
+        // Check if data object is empty and that the value is between
+        // data_min and data_max, then iterate through data object,
+        // find the index of first occurence and number repetitions and return
+        // pair with those values, otherwise returns 0 for both values.
         if (this->data_obj->length() > 0
                 && num >= data_min && num <= data_max) {
             this->data_obj->moveToStart();
 
             while (this->data_obj->currPos() < this->data_obj->length()) {
-
-                if (num == this->data_obj->getValue()) {
+                // Check if value is duplicate, subtracting from value found
+                // in data object for float equality.
+                if (abs(num - this->data_obj->getValue()) <= 1e-9 ) {
                     if (numcount == 0) {
                         numindex = this->data_obj->currPos();
                     }
@@ -291,6 +324,8 @@ public:
         return std::pair(numindex,numcount);
     }
 
+    // Inserts the data object into set by calling unique_set function and
+    // then return the size of the set.
     int length_unique() {
         return unique_set().size();
     }
@@ -299,6 +334,7 @@ public:
         return this->data_obj->length();
     }
 
+    // Iterates through data object and inserts into set.
     std::set<N> unique_set() {
         std::set<N> uni_set;
         this->data_obj->moveToStart();
@@ -309,6 +345,8 @@ public:
         return uni_set;
     }
 
+    // Appends values from generic data container with generic type values
+    // into data object.
     void feed(const L& data_feed){
         for (auto& num:data_feed){
             append(num);
