@@ -13,7 +13,7 @@ private:
 public:
   List() {} // Default constructor
   virtual ~List() {} // Base destructor
-  // Clear contents from the list, to make it empty.
+  // Clear the contents from the list, to make it empty.
   virtual void clear() = 0;
   // Insert an element at the current location.
   // item: The element to be inserted
