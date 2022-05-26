@@ -108,7 +108,7 @@ public:
     for (int i = 0; i < 8; i++) {
         curr = head;
 
-    //while (curr != NULL) {
+    //while (curr != NULL){
         it = remove();
         result.insert(it);
         //cout << "Its in" << endl;
