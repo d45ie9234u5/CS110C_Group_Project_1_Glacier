@@ -186,7 +186,7 @@ private:
             data_sqsum -= delta_mean * (new_element - data_mean);
         }
 
-        data_sd = sqrt(data_sqsum/data_obj->length()*1.0);
+        data_sd = sqrt(data_sqsum/this->data_obj->length()*1.0);
 
 
     }
