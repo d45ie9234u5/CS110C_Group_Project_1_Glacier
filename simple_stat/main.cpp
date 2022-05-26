@@ -59,6 +59,8 @@ int main() {
 
     simpstat->removem(90,10);
     printstats(*simpstat);
+
+    delete simpstat;
 }
 
 
