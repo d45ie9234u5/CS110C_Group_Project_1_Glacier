@@ -20,3 +20,6 @@ HEADERS += \
     list.h \
     llist.h \
     simple_stat.h
+
+DISTFILES += \
+    Simple_stat_UML.pdf
